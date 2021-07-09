@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled from "styled-components";
+import Paper from 'paper';
 
 const Container = styled.canvas`
     display: block;
@@ -7,65 +8,50 @@ const Container = styled.canvas`
 
 function Landing() {
 
-    const FRAME_DURATION = 1000/60;
-    const getTime = typeof performance === 'function' ? performance.now: Date.now;
-
     const canvasRef = useRef(null)
     var canvas;
-    var ctx;
     useEffect(() => {
-        
         canvas = canvasRef.current;
-        ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#313830';
-
-        ctx.lineCap = 'round';
-        ctx.lineWidth = 2;
-        
-        //steps(4);  
-        steps1(0);
+        Paper.setup(canvas)
+        draw(10);
     })
 
-    var step = 0;
-    var speed = .5;
+    function draw(strokeWidth) {
+        var paths = []
+        var rootCoordinates = []
+        for (var i=0;i<40;i++) {
+            let path = new Paper.Path({
+                strokeColor: 'black',
+                strokeWidth: strokeWidth,
+                strokeCap: 'round'
+            })
 
-    var lineWidth = [10, 8, 6, 4, 2];
-    
+            var x = Math.random() * (((window.innerWidth*0.9 - window.innerWidth*0.1)/40*(i+1) + window.innerWidth*0.1) - ((window.innerWidth*0.9 - window.innerWidth*0.1)/40*i + window.innerWidth*0.1)) + ((window.innerWidth*0.9 - window.innerWidth*0.1)/40*i + window.innerWidth*0.1);
+            var y = Math.random() * ((window.innerHeight*0.9 - window.innerHeight*0.4) - (window.innerHeight*0.9 - window.innerHeight*0.6)) + (window.innerHeight*0.9 - window.innerHeight*0.7);
+            
+            rootCoordinates.push({x: x, y: y});
 
-    function steps(widthIndex) {
-        //ctx.clearRect(0, 0, canvas.width, canvas.height);
-        step = step<50? step+speed: step;
-        ctx.beginPath();
-        ctx.moveTo(5, 5);
- 
-        // ctx.lineTo(50, 100);
-        ctx.lineTo(step, step*2);
+            path.add(new Paper.Point(rootCoordinates[i].x, window.innerHeight*0.9));
+            path.add(new Paper.Point(rootCoordinates[i].x, window.innerHeight*0.9));
+
+            paths.push(path);
+        }
+
+        paths[39].view.onFrame = function(event) {
+            for (var j=0;j<40;j++) {
+                if (rootCoordinates[j].y > 0) {
+                    paths[j].segments[1].point.y -= 1;
+                    rootCoordinates[j].y -= 1;
+                }
+            }
+        }
         
-        ctx.lineWidth = lineWidth[widthIndex];
-        ctx.strokeStyle = '#313830';
-        ctx.stroke();
-        window.requestAnimationFrame(steps)
+
     }
 
-    var stepTest = 674
-
-    function steps1(widthIndex) {
-        //ctx.clearRect(0, 0, canvas.width, canvas.height);
-        stepTest = stepTest<800? stepTest+speed: stepTest;
-        ctx.beginPath();
-        ctx.moveTo(50, window.innerHeight);
- 
-        // ctx.lineTo(50, 100);
-        ctx.lineTo(50, stepTest*2);
-        
-        ctx.lineWidth = lineWidth[widthIndex];
-        ctx.strokeStyle = '#313830';
-        ctx.stroke();
-        window.requestAnimationFrame(steps)
-    }
 
     return (
-        <Container ref={canvasRef} hieght={window.innerHeight*0.9} width={window.innerWidth}/>
+        <Container ref={canvasRef} height={window.innerHeight*0.9} width={window.innerWidth}/>
             
     )
 }
