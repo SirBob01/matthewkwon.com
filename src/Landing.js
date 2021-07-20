@@ -9,8 +9,9 @@ const Container = styled.canvas`
 
 const branchLengthRange = (window.innerHeight*0.9 - window.innerHeight*0.7) - (window.innerHeight*0.9 - window.innerHeight*0.8);
 const initialStrokeWidth = 10;
-const treeCount = 1;
-const maxDepth = 5
+const treeCount = 20;
+const maxDepth = 10;
+let trees = [];
 
 class Tree {
     constructor(startPoint, endPoint, depth=maxDepth) {
@@ -26,7 +27,7 @@ class Tree {
         );
         this.path = new Paper.Path({
             strokeColor: 'black',
-            strokeCap: 'square',
+            strokeCap: 'round',
             strokeWidth: (this.depth / maxDepth) * initialStrokeWidth
         });
         this.path.add(this.startPoint);
@@ -34,6 +35,7 @@ class Tree {
         
         let vector = new Paper.Point(this.endPoint.x - this.startPoint.x, this.endPoint.y - this.startPoint.y);
         this.norm = new Paper.Point(vector.x / vector.length, vector.y / vector.length);
+        this.current_length = 0; // How long is the current segment
     }
 
     calculateRandomAngle() {
@@ -51,8 +53,9 @@ class Tree {
         if(Math.abs(dx) >= 10 || Math.abs(dy) >= 10) {
             this.path.segments[1].point.x += this.norm.x;
             this.path.segments[1].point.y += this.norm.y;
+            this.current_length++;
 
-            if(Math.random() < 0.03 && this.depth > 0) {
+            if(Math.random() < 0.1 && this.depth > 0 && this.current_length > (this.depth / maxDepth) * 100 * 0.5) {
                 // Add a new branch to this tree
                 let startPoint = new Paper.Point(this.path.segments[1].point.x, this.path.segments[1].point.y);
                 let angle = this.calculateRandomAngle();
@@ -77,21 +80,18 @@ class Tree {
 }
 
 function Landing() {
-
     const canvasRef = useRef(null)
-    let [trees, setTrees] = useState([]);
     let canvas;
     useEffect(() => {
         canvas = canvasRef.current;
         Paper.setup(canvas);
         Paper.view.onFrame = () => {
             for(let tree of trees) {
-                tree.update();
-            }    
+                tree.update(trees);
+            }
         }
     });
     useEffect(() => {
-        let trees = [];
         for(let index = 0; index < treeCount; index++) {
             let startPoint = new Paper.Point(
                 Math.random() * (((window.innerWidth*0.9 - window.innerWidth*0.1)/20*(index+1) + window.innerWidth*0.1) - ((window.innerWidth*0.9 - window.innerWidth*0.1)/20*index + window.innerWidth*0.1)) + ((window.innerWidth*0.9 - window.innerWidth*0.1)/20*index + window.innerWidth*0.1),
@@ -103,7 +103,6 @@ function Landing() {
             );
             trees.push(new Tree(startPoint, endPoint));
         }
-        setTrees(trees);
     }, []);
 
     return (
