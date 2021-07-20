@@ -7,10 +7,13 @@ const Container = styled.canvas`
     display: block;
 `;
 
+// Tune these variables for desired effect
+// It may affect performance if the generated trees are too dense (high branching factor)
 const branchLengthRange = (window.innerHeight*0.9 - window.innerHeight*0.7) - (window.innerHeight*0.9 - window.innerHeight*0.8);
 const initialStrokeWidth = 10;
-const treeCount = 20;
-const maxDepth = 10;
+const treeCount = 10;
+const maxDepth = 5;
+const maxChildren = 7
 let trees = [];
 
 class Tree {
@@ -55,11 +58,14 @@ class Tree {
             this.path.segments[1].point.y += this.norm.y;
             this.current_length++;
 
-            if(Math.random() < 0.1 && this.depth > 0 && this.current_length > (this.depth / maxDepth) * 100 * 0.5) {
+            if(Math.random() < 0.1 &&
+               this.depth > 0 &&
+               this.current_length > (this.depth / maxDepth) * 100 * 0.5 &&
+               this.children.length < maxChildren) {
                 // Add a new branch to this tree
                 let startPoint = new Paper.Point(this.path.segments[1].point.x, this.path.segments[1].point.y);
                 let angle = this.calculateRandomAngle();
-                let length = (this.depth / maxDepth) * 100 * Math.random();
+                let length = 20 + (this.depth / maxDepth) * 100 * Math.random();
 
                 let endPoint = new Paper.Point(
                     startPoint.x + Math.cos(angle) * length,
@@ -94,7 +100,7 @@ function Landing() {
     useEffect(() => {
         for(let index = 0; index < treeCount; index++) {
             let startPoint = new Paper.Point(
-                Math.random() * (((window.innerWidth*0.9 - window.innerWidth*0.1)/20*(index+1) + window.innerWidth*0.1) - ((window.innerWidth*0.9 - window.innerWidth*0.1)/20*index + window.innerWidth*0.1)) + ((window.innerWidth*0.9 - window.innerWidth*0.1)/20*index + window.innerWidth*0.1),
+                Math.random() * (((window.innerWidth*0.9 - window.innerWidth*0.1)/treeCount*(index+1) + window.innerWidth*0.1) - ((window.innerWidth*0.9 - window.innerWidth*0.1)/treeCount*index + window.innerWidth*0.1)) + ((window.innerWidth*0.9 - window.innerWidth*0.1)/treeCount*index + window.innerWidth*0.1),
                 window.innerHeight*0.9
             );
             let endPoint = new Paper.Point(
